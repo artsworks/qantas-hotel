@@ -1,14 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Dropdown, Item, Rating } from 'semantic-ui-react';
+import { Dropdown, DropdownProps, Item } from 'semantic-ui-react';
 
-import data, {
-  defaultDropdownOption,
-  defaultSorting,
-  Hotel,
-  SortDirection,
-  SortOptions,
-  Sorts,
-} from './models';
+import { sortPriceAscending, sortPriceDescending } from './helpers/sortings';
+import HotelItem from './components/hotel-item';
+
+import data, { defaultDropdownOption, defaultSorting, Hotel, SortDirection, SortOptions, Sorts } from './models';
 
 import qantasLogo from './assets/qantas-logo.png';
 
@@ -18,83 +14,18 @@ function App() {
   const [sort, setSort] = useState<Sorts>(defaultSorting);
   const hotels: Hotel[] = useMemo(() => {
     if (sort.price === SortDirection.ASC) {
-      return data.results.sort((a, b) => {
-        const priceA = a.offer.displayPrice.amount;
-        const priceB = b.offer.displayPrice.amount;
-
-        return priceA < priceB ? -1 : priceA > priceB ? 1 : 0;
-      });
+      return data.results.sort(sortPriceAscending);
     } else if (sort.price === SortDirection.DES) {
-      return data.results.sort((a, b) => {
-        const priceA = a.offer.displayPrice.amount;
-        const priceB = b.offer.displayPrice.amount;
-
-        return priceA < priceB ? 1 : priceA > priceB ? -1 : 0;
-      });
+      return data.results.sort(sortPriceDescending);
     } else {
       return data.results;
     }
   }, [sort]);
 
-  const HotelItem = (hotel: Hotel) => (
-    <Item key={hotel.id} className="page-app__hotels-item">
-      <Item.Image
-        size="small"
-        className="page-app__hotels-item-image"
-        src={hotel.property.previewImage.url}
-        alt={hotel.property.previewImage.caption}
-        label={{
-          color: 'red',
-          content: hotel.offer.promotion.title,
-          ribbon: true,
-        }}
-      />
-
-      <Item.Content>
-        <Item.Header className="page-app__hotels-item-title">
-          {hotel.property.title}
-          <Rating
-            icon={
-              hotel.property.rating.ratingType === 'self' ? 'heart' : 'star'
-            }
-            defaultRating={hotel.property.rating.ratingValue}
-            maxRating={5}
-          />
-        </Item.Header>
-        <Item.Meta>
-          <span className="page-app__hotels-address">
-            {hotel.property.address}
-          </span>
-        </Item.Meta>
-        <Item.Description>
-          <a className="page-app__hotels-offer" href="#">
-            {hotel.offer.name}
-          </a>
-          <p className="page-app__hotels-stay">
-            1 night total ({hotel.offer.displayPrice.currency})
-          </p>
-          <p className="page-app__hotels-price">
-            ${hotel.offer.displayPrice.amount}
-          </p>
-          {hotel.offer.savings ? (
-            <p className="page-app__hotels-savings">
-              Save ${hotel.offer.savings?.amount}
-            </p>
-          ) : (
-            <></>
-          )}
-        </Item.Description>
-      </Item.Content>
-    </Item>
-  );
-
-  function handleSortChange(
-    e: React.SyntheticEvent<HTMLElement, Event>,
-    { value }: { value: SortOptions },
-  ) {
+  function handleSortChange(e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) {
     e.preventDefault();
 
-    switch (value) {
+    switch (data.value) {
       case SortOptions.PRICE_ASC:
         setSort({
           ...defaultSorting,
@@ -132,7 +63,9 @@ function App() {
           />
         </div>
         <Item.Group className="page-app__hotels" divided>
-          {hotels.map((hotel) => HotelItem(hotel))}
+          {hotels.map((hotel) => (
+            <HotelItem key={hotel.id} hotel={hotel} />
+          ))}
         </Item.Group>
       </div>
     </div>
